@@ -55,13 +55,27 @@ with little practical payoff in this use case.
 
 **a. How you used AI**
 
-- How did you use AI tools during this project (for example: design brainstorming, debugging, refactoring)?
-- What kinds of prompts or questions were most helpful?
+AI was used at three distinct stages:
+
+1. **Design** - asked for a Mermaid.js class diagram from a natural-language description of the four
+   classes. The output gave a useful starting structure, though I trimmed several attributes it added
+   (like `email` on Owner) that weren't needed for this scope.
+2. **Implementation** - used inline chat to generate method bodies for `next_occurrence()` and the
+   `detect_conflicts()` dictionary approach. The prompts "How should Scheduler retrieve all tasks
+   from Owner's pets?" and "Give me a lightweight conflict detection strategy that returns warnings
+   instead of raising exceptions" were the most targeted and returned usable code on the first try.
+3. **Testing** - asked for a test plan given the codebase, then refined the generated test functions
+   to use fixtures and cover edge cases (weekly recurrence, no-conflict baseline) that the first
+   draft skipped.
 
 **b. Judgment and verification**
 
-- Describe one moment where you did not accept an AI suggestion as-is.
-- How did you evaluate or verify what the AI suggested?
+The AI initially placed all recurrence logic inside `Scheduler.mark_task_complete`, making `Task`
+a passive data container. I rejected this because it violated the principle that an object should
+own its own behavior - a `Task` is the natural home for "what comes next after me?". I moved the
+logic into `Task.next_occurrence()` and reduced `mark_task_complete` to a thin coordinator. I
+verified the change by running the full test suite and checking that the recurrence tests still
+passed with the new structure.
 
 ---
 
@@ -97,12 +111,23 @@ to ensure `get_todays_schedule()` returns an empty list rather than raising an e
 
 **a. What went well**
 
-- What part of this project are you most satisfied with?
+The clean separation between the logic layer (`pawpal_system.py`) and the UI (`app.py`) worked well.
+Because the backend was tested independently through `main.py` before touching Streamlit, the UI
+integration phase had zero backend bugs to debug - every issue was a Streamlit-specific one (mostly
+`st.session_state` rerun behavior). The "CLI-first" workflow paid off.
 
 **b. What you would improve**
 
-- If you had another iteration, what would you improve or redesign?
+The recurring task model appends the next occurrence to the same flat task list, which means after
+several weeks of daily tasks the list grows unbounded. In a second iteration I would add a
+`completed_tasks` archive list to `Pet` so the active task list only shows upcoming work, and the
+history is still queryable.
 
 **c. Key takeaway**
 
-- What is one important thing you learned about designing systems or working with AI on this project?
+The most valuable skill was knowing when to accept AI output and when to override it. The AI
+consistently produced working code but sometimes traded design cleanliness for brevity (e.g., lumping
+all logic in one class). Acting as the "lead architect" meant holding the design principles (single
+responsibility, objects own their behavior) and using AI as a fast code-generator rather than a
+decision-maker. The human's job is to stay in charge of the design; the AI's job is to fill in the
+implementation details quickly.

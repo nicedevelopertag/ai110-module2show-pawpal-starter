@@ -84,7 +84,6 @@ with st.form("add_task_form"):
     add_task_btn = st.form_submit_button("Add task")
 
     if add_task_btn:
-        # Basic time format validation
         parts = task_time.split(":")
         if len(parts) != 2 or not all(p.isdigit() for p in parts):
             st.error("Time must be in HH:MM format (e.g. 07:30).")
@@ -109,12 +108,28 @@ with st.form("add_task_form"):
 st.header("Today's Schedule")
 
 scheduler = Scheduler(owner)
-todays = scheduler.get_todays_schedule()
 
-# Conflict warnings
+# Conflict warnings shown prominently at the top
 conflicts = scheduler.detect_conflicts()
 for warning in conflicts:
-    st.warning(warning)
+    st.warning(f"Scheduling conflict detected: {warning}")
+
+# Filter controls
+col_filter1, col_filter2 = st.columns(2)
+with col_filter1:
+    filter_pet = st.selectbox("Filter by pet", ["All pets"] + pet_names, key="filter_pet")
+with col_filter2:
+    filter_status = st.selectbox("Filter by status", ["All", "Pending", "Completed"], key="filter_status")
+
+todays = scheduler.get_todays_schedule()
+
+# Apply filters
+if filter_pet != "All pets":
+    todays = [(pet, task) for pet, task in todays if pet.name == filter_pet]
+if filter_status == "Pending":
+    todays = [(pet, task) for pet, task in todays if not task.completed]
+elif filter_status == "Completed":
+    todays = [(pet, task) for pet, task in todays if task.completed]
 
 if todays:
     rows = []
@@ -132,15 +147,16 @@ if todays:
         )
     st.table(rows)
 else:
-    st.info("No tasks scheduled for today. Add tasks above.")
+    st.info("No tasks match the current filters.")
 
 # ---------------------------------------------------------------------------
 # Mark a task complete
 # ---------------------------------------------------------------------------
 
-if todays:
+todays_all = scheduler.get_todays_schedule()
+if todays_all:
     st.header("Mark Task Complete")
-    pending = [(pet, task) for pet, task in todays if not task.completed]
+    pending = [(pet, task) for pet, task in todays_all if not task.completed]
     if pending:
         task_labels = [f"{task.time} - {pet.name}: {task.description}" for pet, task in pending]
         chosen = st.selectbox("Select task to mark done", task_labels)
@@ -153,7 +169,7 @@ if todays:
                     f"Done! Next '{next_t.description}' scheduled for **{next_t.due_date}**."
                 )
             else:
-                st.success("Task marked complete.")
+                st.success("Task marked complete. (One-time task, no recurrence.)")
             st.rerun()
     else:
         st.success("All tasks for today are complete!")
