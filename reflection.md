@@ -69,13 +69,27 @@ with little practical payoff in this use case.
 
 **a. What you tested**
 
-- What behaviors did you test?
-- Why were these tests important?
+The nine tests in `tests/test_pawpal.py` cover:
+
+1. `mark_complete()` flips `Task.completed` from False to True - confirms the state mutation works
+2. `add_task()` increments the pet's task list length - guards against silent failures on append
+3. `sort_by_time` returns tasks in HH:MM ascending order - verifies the lambda key handles strings
+4. Daily `next_occurrence()` lands exactly one day ahead - core recurrence contract
+5. Weekly `next_occurrence()` lands exactly seven days ahead - same for weekly cadence
+6. One-time task `next_occurrence()` returns None - ensures no phantom tasks are created
+7. `mark_task_complete` adds the next occurrence to the pet's task list - integration test for recurrence
+8. Duplicate `(pet, time, date)` triggers a conflict warning - validates the detection algorithm
+9. Different task times produce no warnings - verifies no false positives
+
+These are the behaviors most likely to break during a refactor, so having them automated saves time
+and catches regressions immediately.
 
 **b. Confidence**
 
-- How confident are you that your scheduler works correctly?
-- What edge cases would you test next if you had more time?
+**4 out of 5 stars.** All 9 tests pass and cover the main happy paths and key edge cases. The main
+gap is overlapping-duration detection: two tasks that start at different times but overlap when
+duration is factored in are not currently flagged. I would also add a test for a pet with zero tasks
+to ensure `get_todays_schedule()` returns an empty list rather than raising an exception.
 
 ---
 
