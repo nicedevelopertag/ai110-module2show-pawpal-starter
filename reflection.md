@@ -55,27 +55,24 @@ with little practical payoff in this use case.
 
 **a. How you used AI**
 
-AI was used at three distinct stages:
+Inline Chat was the most useful feature - I could highlight a method stub and ask for the body
+without losing context. It worked well for things like `detect_conflicts()` where the logic was
+clear in my head but tedious to type out. Agent mode helped when I needed to flesh out multiple
+methods at once during the implementation phase.
 
-1. **Design** - asked for a Mermaid.js class diagram from a natural-language description of the four
-   classes. The output gave a useful starting structure, though I trimmed several attributes it added
-   (like `email` on Owner) that weren't needed for this scope.
-2. **Implementation** - used inline chat to generate method bodies for `next_occurrence()` and the
-   `detect_conflicts()` dictionary approach. The prompts "How should Scheduler retrieve all tasks
-   from Owner's pets?" and "Give me a lightweight conflict detection strategy that returns warnings
-   instead of raising exceptions" were the most targeted and returned usable code on the first try.
-3. **Testing** - asked for a test plan given the codebase, then refined the generated test functions
-   to use fixtures and cover edge cases (weekly recurrence, no-conflict baseline) that the first
-   draft skipped.
+Keeping separate chat sessions for design, implementation, and testing made a real difference.
+The design session stayed focused on class relationships and didn't get polluted with pytest
+syntax questions. When I started the testing session fresh, I could just say "here's my codebase,
+what should I test?" and get a clean answer instead of one shaped by earlier implementation
+conversations.
 
 **b. Judgment and verification**
 
-The AI initially placed all recurrence logic inside `Scheduler.mark_task_complete`, making `Task`
-a passive data container. I rejected this because it violated the principle that an object should
-own its own behavior - a `Task` is the natural home for "what comes next after me?". I moved the
-logic into `Task.next_occurrence()` and reduced `mark_task_complete` to a thin coordinator. I
-verified the change by running the full test suite and checking that the recurrence tests still
-passed with the new structure.
+Copilot put the recurrence logic entirely inside `Scheduler.mark_task_complete`. It worked, but it
+meant `Task` had no knowledge of its own schedule - a daily task couldn't tell you when it
+recurred next without going through the scheduler. I moved that logic to `Task.next_occurrence()`
+so each task owns its own behavior, and `mark_task_complete` just calls it. Ran the tests after
+to make sure nothing broke.
 
 ---
 
