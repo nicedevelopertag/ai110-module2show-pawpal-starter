@@ -4,8 +4,21 @@
 
 **a. Initial design**
 
-- Briefly describe your initial UML design.
-- What classes did you include, and what responsibilities did you assign to each?
+Three core actions a user needs to perform: (1) add a pet with basic info, (2) schedule a care task
+for a specific pet at a given time, and (3) view today's plan sorted chronologically.
+
+To support these, I designed four classes:
+
+- **Task** (dataclass) - holds a single activity: description, scheduled time (HH:MM), duration,
+  frequency (once/daily/weekly), priority, completion flag, and due date. Responsible for knowing
+  when it recurs.
+- **Pet** (dataclass) - stores name, species, and an owned list of Tasks. Responsible for managing
+  its own task collection.
+- **Owner** - holds a list of Pets and provides a flat view of all tasks across every pet.
+- **Scheduler** - the "brain"; takes an Owner and provides sorted schedules, filters, conflict
+  detection, and recurring-task promotion.
+
+The UML relationship chain is: `Owner 1--* Pet 1--* Task`, and `Scheduler --> Owner`.
 
 **b. Design changes**
 
