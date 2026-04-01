@@ -139,3 +139,5 @@ Run the app locally with:
 ```bash
 streamlit run app.py
 ```
+
+<a href="image_section6.png" target="_blank"><img src='image_section6.png' title='PawPal App' width='' alt='PawPal App' class='center-block' /></a>
