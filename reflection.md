@@ -22,8 +22,11 @@ The UML relationship chain is: `Owner 1--* Pet 1--* Task`, and `Scheduler --> Ow
 
 **b. Design changes**
 
-- Did your design change during implementation?
-- If yes, describe at least one change and why you made it.
+During implementation I moved `next_occurrence()` onto the `Task` class itself rather than keeping
+it entirely in `Scheduler`. Initially I placed the recurrence logic in `Scheduler.mark_task_complete`,
+but that caused the Task to have no self-knowledge about its own cadence. Moving the method to
+`Task` respected the principle that each class should own its own behavior, and it made the
+`Scheduler` method a thin coordinator rather than a big logic block.
 
 ---
 
@@ -31,13 +34,20 @@ The UML relationship chain is: `Owner 1--* Pet 1--* Task`, and `Scheduler --> Ow
 
 **a. Constraints and priorities**
 
-- What constraints does your scheduler consider (for example: time, priority, preferences)?
-- How did you decide which constraints mattered most?
+The scheduler considers: scheduled time (HH:MM), due date, and priority level (low/medium/high).
+Sorting is done by time so the owner sees tasks in the order they need to act on them. Priority is
+surfaced in the UI so the owner can make manual judgment calls about what to skip if time is short.
+Time was treated as the primary constraint because pet care is largely time-anchored (a dog needs
+its morning walk before work, not "sometime today").
 
 **b. Tradeoffs**
 
-- Describe one tradeoff your scheduler makes.
-- Why is that tradeoff reasonable for this scenario?
+Conflict detection only flags exact time matches for the same pet on the same date. It does not
+check for overlapping durations (e.g., a 30-minute walk starting at 07:30 and a 10-minute task
+starting at 07:45 technically overlap but won't trigger a warning). This is a reasonable tradeoff
+for a personal pet-care app because most tasks are short and the owner can eyeball duration
+overlap - adding full interval overlap logic would significantly complicate the detection algorithm
+with little practical payoff in this use case.
 
 ---
 
